@@ -1,3 +1,12 @@
+% DO NOT DELETE THIS; this is to demonstrate how it works.
+%{
+img = imread("../input/1.jpg");
+mask = im2bw(imread("../input/Mask1.png"));
+Num_windows = 15
+Window_width = 30 
+initaLocalWindows(img, mask, Num_windows, Window_width, true);
+%}
+
 function [MaskOutline, LocalSamples] = initLocalWindows(IMG,Mask,Num_windows,Window_width,ShowWindows)
 % INITIALIZElOCALWINDOWS Create local windows on boundary of mask
 %   
@@ -29,8 +38,8 @@ for i=1:length(Boundaries)
     [WindowCentersX, WindowCentersY] = ...
         equidistantPointsOnPerimeter(Boundary(:,2), Boundary(:,1), PointsForBoundary(i));
 
-    AllLocalBoxCentersX = [AllLocalBoxCentersX; LocalBoxCentersX];
-    AllLocalBoxCentersY = [AllLocalBoxCentersY; LocalBoxCentersY];
+    AllWindowCentersX = [AllWindowCentersX; WindowCentersX];
+    AllWindowCentersY = [AllWindowCentersY; WindowCentersY];
 end
 
 LocalSamples = [AllWindowCentersX AllWindowCentersY];
