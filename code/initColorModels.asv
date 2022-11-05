@@ -73,14 +73,15 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
                         B_pixels = [B_pixels; Img(row, col, 1) Img(row, col, 2) Img(row, col, 3)];
                     else
                         F_pixels = [F_pixels; Img(row, col, 1) Img(row, col, 2) Img(row, col, 3)];
+
                         %F_pixels = [F_pixels; squeeze(Img(row, col, :))'];
                     end
                 end
             end
         end
 
-        F_gmm = fitgmdist(F_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
-        B_gmm = fitgmdist(B_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
+        F_gmm = fitgmdist(F_pixels, 3, 'RegularizationValue', 0.0007, 'Options', options);
+        B_gmm = fitgmdist(B_pixels, 3, 'RegularizationValue', 0.0007, 'Options', options);
         
 
         
