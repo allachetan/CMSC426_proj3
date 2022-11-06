@@ -1,0 +1,31 @@
+function ShapeConfidences = initShapeConfidences(imageSize, LocalWindows, ColorConfidences, window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R)
+% INITSHAPECONFIDENCES Initialize shape confidences.  ShapeConfidences is a struct you should define yourself.
+    num_windows = length(LocalWindows);
+    f_c_values = ColorConfidences;
+    %ShapeConfidences = 
+
+    image_painted_with_f_s = zeros(imageSize);
+
+    for i=1:num_windows
+        f_c = f_c_values{i};
+        if(f_c <= fcutoff)
+            sigma_s = SigmaMin;
+        else
+            sigma_s = SigmaMin + A * (f_c - fcutoff)^R;
+        end
+
+        window_d_matrix = window_d_matrices{i};
+        window_f_s_matrix = 1 - exp(-1 .* (window_d_matrix.^2)./(sigma_s.^2));
+        
+        figure
+        imshow(window_f_s_matrix)
+
+        for row=imageSize()
+
+
+    end
+
+
+
+
+end

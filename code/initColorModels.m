@@ -1,10 +1,26 @@
+%{
+this is to illustrate how to use the 3 init files...
 img = imread("../input/1.jpg");
 mask = im2bw(imread("../input/Mask1.png"));
 Num_windows = 20;
-Window_width = 30;
+Window_width = 50;
 [MaskOutline, LocalWindows] = initLocalWindows(img, mask, Num_windows, Window_width, true);
 boundry_width = 5; 
-colorModel = initializeColorModels(img, mask, MaskOutline, LocalWindows, boundry_width, Window_width)
+colorModel = initializeColorModels(img, mask, MaskOutline, LocalWindows, boundry_width, Window_width);
+
+ColorConfidences = colorModel.f_c_values;
+window_d_matrices = colorModel.window_d_matrices;
+
+% we specify these
+SigmaMin = 20;
+SigmaMax = Window_width + 1;
+fcutoff = 0.2; 
+R = 2;
+A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
+
+ShapeConfidences = initShapeConfidences(size(mask), LocalWindows,
+ColorConfidences, window_d_matrices, Window_width, SigmaMin, A, fcutoff, R);
+%}
 
 function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindows, BoundaryWidth, WindowWidth)
 % INITIALIZAECOLORMODELS Initialize color models.  ColorModels is a struct you should define yourself.
@@ -28,16 +44,16 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
             end
         end
     end
-    %{
+
+    figure
+    imshow(MaskOutline)
+
     figure
     imshow(MaskOutline_with_BoundaryWidth)
 
     figure
     imshow(w_c_matrix)
 
-    figure
-    imshow(Mask)
-    %}
 
     % for gmm models
     options = statset('MaxIter', 800);
@@ -103,6 +119,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
     num_windows = length(LocalWindows);
 
     window_masks = cell(1, num_windows);
+    window_d_matrices = cell(1, num_windows);
     window_w_c_matrices = cell(1, num_windows);
     window_p_c_matrices = cell(1, num_windows);
     f_c_values = cell(1, num_windows);
@@ -159,7 +176,8 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
         window_w_c_matrix = w_c_matrix(startRow:endRow,startCol:endCol);
         window_mask = Mask(startRow:endRow,startCol:endCol);
-        
+        window_d_matrix = d_matrix(startRow:endRow,startCol:endCol);
+
         up = sum(abs(window_mask - window_p_c_matrix) .* window_w_c_matrix);
         down = sum(window_w_c_matrix);
 
@@ -167,6 +185,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
         % store the info so we can return them
         window_masks{i} = window_mask;
+        window_d_matrices{i} = window_d_matrix;
         window_w_c_matrices{i} = window_w_c_matrix;
         window_p_c_matrices{i} = window_p_c_matrix;
         f_c_values{i} = f_c;
@@ -175,7 +194,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
     ColorModels = struct('F_gmm', {F_gmm}, 'B_gmm', {B_gmm}, ...
         'MaskOutline_with_BoundaryWidth', {MaskOutline_with_BoundaryWidth}, ...
         'd_matrix', {d_matrix}, ...
-        'window_masks', {window_masks}, 'window_w_c_matrices', {window_w_c_matrices}, ...
+        'window_masks', {window_masks}, 'window_d_matrices', {window_d_matrices}, 'window_w_c_matrices', {window_w_c_matrices}, ...
         'window_p_c_matrices', {window_p_c_matrices}, ...
         'f_c_values', {f_c_values});
 end
