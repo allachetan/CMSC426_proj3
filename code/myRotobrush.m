@@ -5,10 +5,11 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = -1;  
+WindowWidth = 50;  
 ProbMaskThreshold = -1; 
-NumWindows= -1; 
-BoundaryWidth = -1;
+NumWindows= 20; 
+BoundaryWidth = 5;
+
 
 % Load images:
 fpath = '../input';
@@ -20,6 +21,7 @@ for i=1:length(files)
     imageNames(i) = str2double(strtok(files(i).name,'.jpg'));
 end
 
+
 imageNames = sort(imageNames);
 imageNames = num2str(imageNames);
 imageNames = strcat(imageNames, '.jpg');
@@ -27,11 +29,19 @@ imageNames = strcat(imageNames, '.jpg');
 for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
+img = imread("../input/1.jpg");
+images{1} = img;
 
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
-mask = roipoly(images{1});
+% mask = roipoly(images{1});
+mask = im2bw(imread("../input/Mask1.png"));
 
-imshow(imoverlay(images{1}, boundarymask(mask,8),'red'));
+im_copy = images{1};
+
+B = imoverlay(im_copy, boundarymask(mask,8),'red');
+
+imshow(B);
+
 set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
@@ -47,14 +57,20 @@ ColorModels = ...
     initColorModels(images{1},mask,mask_outline,LocalWindows,BoundaryWidth,WindowWidth);
 
 % You should set these parameters yourself:
-fcutoff = -1;
-SigmaMin = -1;
-SigmaMax = -1;
-R = -1;
-A = -1;
-ShapeConfidences = ...
-    initShapeConfidences(LocalWindows,ColorModels,...
-    WindowWidth, SigmaMin, A, fcutoff, R);
+fcutoff = 0.2;
+SigmaMin = 20;
+SigmaMax = WindowWidth + 1;
+R = 2;
+A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
+
+
+ColorConfidences = ColorModels.f_c_values;
+window_d_matrices = ColorModels.window_d_matrices;
+
+ShapeConfidences = initShapeConfidences(size(mask), LocalWindows,...
+ColorConfidences, window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R);
+
+
 
 % Show initial local windows and output of the color model:
 imshow(images{1})
@@ -65,7 +81,7 @@ set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
 
-showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+showColorConfidences(images{1},mask_outline,ColorConfidences,LocalWindows,WindowWidth);
 
 %%% MAIN LOOP %%%
 % Process each frame in the video.
