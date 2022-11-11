@@ -29,7 +29,7 @@ imageNames = strcat(imageNames, '.jpg');
 for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
-img = imread("../input/1.jpg");
+img = imread("../input/2.jpg");
 images{1} = img;
 
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
