@@ -1,12 +1,12 @@
 %{
-this is to illustrate how to use the 3 init files...
-img = imread("../input/1.jpg");
+%this is to illustrate how to use the 3 init files...
+img = imread("../input/2.jpg");
 mask = im2bw(imread("../input/Mask1.png"));
 Num_windows = 20;
-Window_width = 50;
+Window_width = 60;
 [MaskOutline, LocalWindows] = initLocalWindows(img, mask, Num_windows, Window_width, true);
-boundry_width = 5; 
-colorModel = initializeColorModels(img, mask, MaskOutline, LocalWindows, boundry_width, Window_width);
+boundry_width = 4; 
+colorModel = initializeColorModels(img, mask, MaskOutline, LocalWindows, boundry_width, Window_width)
 
 ColorConfidences = colorModel.f_c_values;
 window_d_matrices = colorModel.window_d_matrices;
@@ -14,11 +14,11 @@ window_d_matrices = colorModel.window_d_matrices;
 % we specify these
 SigmaMin = 20;
 SigmaMax = Window_width + 1;
-fcutoff = 0.2; 
+fcutoff = 0.2;  % from 0 to 1
 R = 2;
 A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
 
-ShapeConfidences = initShapeConfidences(size(mask), LocalWindows,
+ShapeConfidences = initShapeConfidences(size(mask), LocalWindows, ...
 ColorConfidences, window_d_matrices, Window_width, SigmaMin, A, fcutoff, R);
 %}
 
@@ -57,7 +57,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
     % for gmm models
     options = statset('MaxIter', 800);
-
+    %{
     %%%% count pixels in background and pixels and foreground
     countB = 0;
     countF = 0;
@@ -113,11 +113,12 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
     F_gmm = fitgmdist(F_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
     B_gmm = fitgmdist(B_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
-
+    %}
 
 
     num_windows = length(LocalWindows);
-
+    window_F_gmms = cell(1, num_windows);
+    window_B_gmms = cell(1, num_windows);
     window_masks = cell(1, num_windows);
     window_d_matrices = cell(1, num_windows);
     window_w_c_matrices = cell(1, num_windows);
@@ -138,7 +139,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
         endCol = min([sz(2), center(2) + sigma_c]);
  
         window = Img(startRow:endRow,startCol:endCol, :);
-        %{
+        
         B_pixels = [];
         F_pixels = [];
 
@@ -160,7 +161,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
         F_gmm = fitgmdist(F_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
         B_gmm = fitgmdist(B_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
-        %}
+        
         window_p_c_matrix = zeros(WindowWidth, WindowWidth); % foreground probability
         windowSize = size(window);
         
@@ -180,10 +181,11 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
         up = sum(abs(window_mask - window_p_c_matrix) .* window_w_c_matrix);
         down = sum(window_w_c_matrix);
-
         f_c = 1 - up/down;
 
         % store the info so we can return them
+        window_F_gmms{i} = F_gmm;
+        window_B_gmms{i} = B_gmm;
         window_masks{i} = window_mask;
         window_d_matrices{i} = window_d_matrix;
         window_w_c_matrices{i} = window_w_c_matrix;
@@ -191,9 +193,8 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
         f_c_values{i} = f_c;
     end
 
-    ColorModels = struct('F_gmm', {F_gmm}, 'B_gmm', {B_gmm}, ...
+    ColorModels = struct('window_F_gmms', {window_F_gmms}, 'window_B_gmms', {window_B_gmms}, ...
         'MaskOutline_with_BoundaryWidth', {MaskOutline_with_BoundaryWidth}, ...
-        'd_matrix', {d_matrix}, ...
         'window_masks', {window_masks}, 'window_d_matrices', {window_d_matrices}, 'window_w_c_matrices', {window_w_c_matrices}, ...
         'window_p_c_matrices', {window_p_c_matrices}, ...
         'f_c_values', {f_c_values});
