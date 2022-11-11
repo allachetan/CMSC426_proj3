@@ -44,7 +44,8 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
             end
         end
     end
-
+    %{ 
+    UNCOMMENT TO SHOW PLOTS
     figure
     imshow(MaskOutline)
 
@@ -53,7 +54,7 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
 
     figure
     imshow(w_c_matrix)
-
+    %}
 
     % for gmm models
     options = statset('MaxIter', 800);
