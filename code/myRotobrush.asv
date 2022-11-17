@@ -129,8 +129,8 @@ for prev=1:(length(files)-1)
         ProbMaskThreshold, ... %hyper parameter
         fcutoff, ... %hyper parameter
         SigmaMin, ... %hyper parameter
-        R, ... %dont touch 
-        A ... %dont touch
+        R, ... %hyper parameter
+        A ... %hyper parameter?
     );
 
     mask_outline = bwperim(mask,4);

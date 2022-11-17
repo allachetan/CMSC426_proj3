@@ -1,7 +1,8 @@
+
 function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calculateGlobalAffine(IMG1,IMG2,Mask,Windows)
 % CALCULATEGLOBALAFFINE: finds affine transform between two frames, and applies it to frame1, the mask, and local windows.
 
-% Detects feature in both frames 
+% Detects feature in both frames (maybe add vision. before the sift feat)
 im1Features  = detectSIFTFeatures(rgb2gray(IMG1));
 im2Features = detectSIFTFeatures(rgb2gray(IMG2));
 
@@ -34,10 +35,5 @@ WarpedMask = imwarp(Mask, tform);
 
 WarpedMaskOutline = bwperim(WarpedMask,4);
 
-WarpedLocalWindows = imwarp(Windows);
-
-
-
-
-    
+WarpedLocalWindows = imwarp(Windows, tform);    
 end

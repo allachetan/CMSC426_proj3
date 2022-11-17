@@ -5,13 +5,13 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
 opticFlow = opticalFlowHS;
 
 
-roi_im1 = im2gray(WarpedPrevFrame);
+roi_im1 = double(im2gray(WarpedPrevFrame));
+roi_im2 = double(im2gray(CurrentFrame));
 
-roi_im2 = im2gray(CurrentFrame);
-
-roi_im1(Mask == 0) = 0;
-roi_im2(Mask == 0) = 0;
-
+% roi_im1(Mask == 0) = 0;
+% roi_im2(Mask == 0) = 0;
+roi_im1 = roi_im1.*Mask;
+roi_im2 = roi_im2.*Mask;
 
 images = [roi_im1, roi_im2];
 flow = 0;
