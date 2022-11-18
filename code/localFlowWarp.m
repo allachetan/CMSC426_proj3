@@ -18,12 +18,11 @@ flow = 0;
 
 for i = 1:2
     frameGray = im2gray(images(i));  
-    flow = flow + estimateFlow(opticFlow,frameGray);
+    flow = estimateFlow(opticFlow,frameGray);
 end
-avg_flow = flow/2;
 
 
-flow_vect = [avg_flow.Vx, avg_flow.Vy];
+flow_vect = [flow.Vx, flow.Vy];
 
 NewLocalWindows = zeros(size(LocalWindows));
 
