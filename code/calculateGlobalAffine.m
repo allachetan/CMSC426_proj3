@@ -21,7 +21,14 @@ matchedim2Features = validim2Features(index_pairs(:,2));
 % showMatchedFeatures(IMG1,IMG2,matchedim1Features,matchedim2Features)
 % title('Matched SURF Points With Outliers');
 
-tform = estimateGeometricTransform(matchedim2Features,matchedim1Features,'affine');
+[tform,inlierIdx] = estimateGeometricTransform(matchedim2Features,matchedim1Features,'affine');
+% 
+% outputView = imref2d(size(original));
+% Ir = imwarp(distorted,tform,'OutputView',outputView);
+% figure 
+% imshow(Ir); 
+% title('Recovered Image');
+% 
 
 
 % figure 
@@ -36,5 +43,7 @@ tform = estimateGeometricTransform(matchedim2Features,matchedim1Features,'affine
 
 WarpedMaskOutline = bwperim(WarpedMask,4);
 
-WarpedLocalWindows = imwarp(Windows, tform);    
+% WarpedLocalWindows = imwarp(Windows, tform, OutputView=imref2d(size(Windows)));    
+WarpedLocalWindows = inlierIdx.Location;
+
 end

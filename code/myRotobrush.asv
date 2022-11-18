@@ -104,7 +104,7 @@ for prev=1:(length(files)-1)
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
-    showLocalWindows(warpedLocalWindows,WindowWidth,'r.');
+    showLocalWindows(LocalWindows,WindowWidth,'r.');
     showLocalWindows(NewLocalWindows,WindowWidth,'b.');
     hold off
     
@@ -129,8 +129,8 @@ for prev=1:(length(files)-1)
         ProbMaskThreshold, ... %hyper parameter
         fcutoff, ... %hyper parameter
         SigmaMin, ... %hyper parameter
-        R, ... %hyper parameter
-        A ... %hyper parameter?
+        R, ... %dont touch 
+        A ... %dont touch
     );
 
     mask_outline = bwperim(mask,4);

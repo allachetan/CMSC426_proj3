@@ -23,20 +23,25 @@ matchedim2Features = validim2Features(index_pairs(:,2));
 
 tform = estimateGeometricTransform(matchedim2Features,matchedim1Features,'affine');
 
+outputView = imref2d(size(original));
+Ir = imwarp(distorted,tform,'OutputView',outputView);
+figure 
+imshow(Ir); 
+title('Recovered Image');
+
+
 
 % figure 
 % showMatchedFeatures(original,distorted,inlierim1Features,inlierim2Features)
 % title('Matched Inlier Points')
 
-[B,RB] = imwarp(A,RA,tform)
-
 
 % applies affine transformation to first frame 
-[WarpedFrame, RA] = imwarp(IMG1,tform, RA = imref2d( size(IMG1) ));
+[WarpedFrame, RA] = imwarp(IMG1, tform, OutputView=imref2d(size(IMG1)));
 
-[WarpedMask, RB] = imwarp(Mask, tformm, RA = imref2d( size(Mask) ));
+[WarpedMask, RB] = imwarp(Mask, tform, OutputView=imref2d(size(Mask)));
 
 WarpedMaskOutline = bwperim(WarpedMask,4);
 
-WarpedLocalWindows = imwarp(Windows, tform);    
+WarpedLocalWindows = imwarp(Windows, tform, OutputView=imref2d(size(Windows)));    
 end
