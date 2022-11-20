@@ -19,7 +19,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
 
     BoundaryWidth = 5;
     
-    LocalWindows = NewLocalWindows;
+    LocalWindows = round(NewLocalWindows);
+    [min(LocalWindows), max(LocalWindows)]
     
     ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutline,...
     LocalWindows, BoundaryWidth, WindowWidth, ColorModels);   
@@ -45,7 +46,7 @@ function ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutlin
     %%%% Hyper Parameter %%%%
     threshold = .75;
 
-    num_windows = size(LocalWindows);
+    num_windows = size(LocalWindows) * [1;0];
 
     %Getting color models for the current frame
     imshow(warpedMaskOutline);
