@@ -101,6 +101,7 @@ for prev=1:(length(files)-1)
     NewLocalWindows = ...
         localFlowWarp(warpedFrame,images{curr},warpedLocalWindows,warpedMask,WindowWidth);
     
+    NewLocalWindows = ceil(NewLocalWindows);
     paintZerosWithWindowMasks(warpedMask, round(NewLocalWindows), WindowWidth);
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
