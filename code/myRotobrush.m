@@ -5,10 +5,10 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 50;  
+WindowWidth = 70;  
 ProbMaskThreshold = .5; %need to look at the paper to see what to set this to
 NumWindows= 20; 
-BoundaryWidth = 5;
+BoundaryWidth = 3;
 
 
 % Load images:
@@ -101,6 +101,7 @@ for prev=1:(length(files)-1)
     NewLocalWindows = ...
         localFlowWarp(warpedFrame,images{curr},warpedLocalWindows,warpedMask,WindowWidth);
     
+    paintZerosWithWindowMasks(warpedMask, round(NewLocalWindows), WindowWidth);
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
@@ -152,3 +153,44 @@ for prev=1:(length(files)-1)
 end
 
 close(outputVideo);
+
+
+
+
+
+
+
+
+
+function paintZerosWithWindowMasks(Mask, LocalWindows, WindowWidth)
+        sz = size(Mask);
+        image_painted = zeros(sz);
+        num_windows = length(LocalWindows);
+        sigma_c = round(WindowWidth / 2); % half window size
+        figure;
+
+        for i=1:num_windows
+            center = LocalWindows(i,:);
+            center = [center(2) center(1)]; % make it center(row, col)
+
+            % below is just for the illustration after the loop.
+            center = LocalWindows(i,:);
+            center = [center(2) center(1)]; % make it center(row, col)
+    
+
+            startRow = max([1, center(1) - sigma_c]);% added min/max to avoid out of range at image edges.
+            endRow = (min([sz(1), center(1) + sigma_c])); 
+    
+            startCol = max([1, center(2) - sigma_c]);
+            endCol = min([sz(2), center(2) + sigma_c]);
+
+            window_mask = Mask(startRow:endRow,startCol:endCol);
+            for row=1:WindowWidth
+                for col=1:WindowWidth
+                    image_painted(row + startRow - 1, col + startCol - 1) = window_mask(row, col) + 0.5;
+                end
+            end
+            imshow(image_painted);
+
+        end
+end
