@@ -125,8 +125,6 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
     window_w_c_matrices = cell(1, num_windows);
     window_p_c_matrices = cell(1, num_windows);
     f_c_values = cell(1, num_windows);
-    %DYLAN ADDED
-    f_pixel_count = cell(1, num_windows);
     for i=1:num_windows
         center = LocalWindows(i,:);
         center = [center(2) center(1)]; % make it center(row, col)
@@ -193,9 +191,6 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
         window_w_c_matrices{i} = window_w_c_matrix;
         window_p_c_matrices{i} = window_p_c_matrix;
         f_c_values{i} = f_c;
-         %DYLAN ADDED
-        f_pixel_count{i} = size(F_pixels);
-
     end
 
     ColorModels = struct( ...
@@ -206,7 +201,6 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
         'window_d_matrices', {window_d_matrices}, ...
         'window_w_c_matrices', {window_w_c_matrices}, ...
         'window_p_c_matrices', {window_p_c_matrices}, ...
-        'f_c_values', {f_c_values},...
-        'f_pixel_count',{f_pixel_count});
+        'f_c_values', {f_c_values});
 end
 
