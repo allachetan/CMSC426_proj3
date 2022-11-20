@@ -45,7 +45,7 @@ function ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutlin
     num_windows = size(LocalWindows);
 
     %Getting color models for the current frame
-    newColorModels = initColorModels(CurrentFrame, warpedMask, ...
+    newColorModels = initColorModels.initializeColorModels(CurrentFrame, warpedMask, ...
         warpedMaskOutline, LocalWindows, BoundaryWidth, WindowWidth);
 
     %getting the masks for the windows
@@ -134,12 +134,11 @@ function count = foregroundPixelCount(center,sz,sigma_c,MaskWithBoundary,Mask)
     count = foreground_count;
 end
 
-function masks = applyColorModels(FGMMs,BGMMs, num_windows,WindowWidth,...
+function masks = applyColorModels(FGMMs,BGMMs, num_windows,WindowWidth,...applyColorModels
     Img,sigma_c,LocalWindows)
 
     window_p_c_matrices = cell(1, num_windows);
     for i=1:num_windows
-        
         center = LocalWindows(i,:);
         center = [center(2) center(1)];
         window = zeros(WindowWidth, WindowWidth, 3);

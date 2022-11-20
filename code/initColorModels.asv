@@ -160,6 +160,8 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
                 end
             end
         end
+        %ADDED BY DYLAN
+        f_count = size(F_pixels);
 
         F_gmm = fitgmdist(F_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
         B_gmm = fitgmdist(B_pixels, 3, 'RegularizationValue', 0.0006, 'Options', options);
@@ -193,9 +195,6 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
         window_w_c_matrices{i} = window_w_c_matrix;
         window_p_c_matrices{i} = window_p_c_matrix;
         f_c_values{i} = f_c;
-         %DYLAN ADDED
-        f_pixel_count{i} = size(F_pixels);
-
     end
 
     ColorModels = struct( ...
@@ -206,7 +205,6 @@ function ColorModels = initializeColorModels(Img, Mask, MaskOutline, LocalWindow
         'window_d_matrices', {window_d_matrices}, ...
         'window_w_c_matrices', {window_w_c_matrices}, ...
         'window_p_c_matrices', {window_p_c_matrices}, ...
-        'f_c_values', {f_c_values},...
-        'f_pixel_count',{f_pixel_count});
+        'f_c_values', {f_c_values});
 end
 

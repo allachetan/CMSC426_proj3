@@ -31,8 +31,6 @@ for i = 1:size(LocalWindows,1)
     NewLocalWindows(i, 2) = LocalWindows(i, 2) + flow_vect(2);
 end
 
-
-
 end
 
 
