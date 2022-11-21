@@ -25,7 +25,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
 
    ColorConfidences = ColorModels.f_c_values;
    window_d_matrices = ColorModels.window_d_matrices;
-   ShapeConfidences = getShapeConfidences(maskSize, LocalWindows, ColorConfidences,...
+   
+   ShapeConfidences = initShapeConfidences(maskSize, LocalWindows, ColorConfidences,...
        window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R);
 
    mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,WindowWidth,CurrentFrame);
@@ -40,11 +41,12 @@ end
 function ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutline,...
    LocalWindows, BoundaryWidth, WindowWidth, oldColorModels)
    %%%% Hyper Parameter %%%%
-   threshold = .75;
-   num_windows = size(LocalWindows)*[1;0];
+   threshold = .75;   
+
    %Getting color models for the current frame
    newColorModels = initColorModels(CurrentFrame, warpedMask, ...
        warpedMaskOutline, LocalWindows, BoundaryWidth, WindowWidth);
+
    %getting the foreground GMMS
    oldFGMMS = oldColorModels.window_F_gmms;
    newFGMMS = newColorModels.window_F_gmms;
@@ -54,16 +56,15 @@ function ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutlin
    %getting the Confidence values
    oldColorConf = oldColorModels.f_c_values;
    newColorConf = newColorModels.f_c_values;
-  
+
+   num_windows = size(LocalWindows)*[1;0];
+
    %Initializing empty GMMs and color confidence cells to be filled in
    %with the correct (new vs old) data
    updatedFGMMs = cell(1, num_windows);
    updatedBGMMs = cell(1, num_windows);
    updatedColorConf = cell(1, num_windows);
-   %getting the forground prob matricies for old gmms on new windows
-%     p_c_matrices = applyColorModels(oldFGMMS,oldBGMMS, num_windows,...
-%         WindowWidth,Img,sigma_c,LocalWindows);
-%     newForegroundPixelCount = newColorModels.f_pixel_count;
+   
    %For each window calculate the number of foreground pixels for the new
    %and old models. If the new model has a an area <= old model then
    %update the GMMs to use the new model, else use the old model. If the
@@ -89,8 +90,6 @@ function ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutlin
            updatedColorConf{i} = newColorConf{i};
        end
    end
-   %if newcolormodel area <= old colormodel area then recompute color
-   %confidence values
    ColorModels = struct( ...
        'window_F_gmms', {updatedFGMMs},...
        'window_B_gmms', {updatedBGMMs},...
@@ -114,10 +113,13 @@ function win_pc = applyColorModels(Img,center,B_gmm,F_gmm,WindowWidth,sz,sigma_c
    endRow = (min([sz(1), center(1) + sigma_c]));
    startCol = max([1, center(2) - sigma_c]);
    endCol = min([sz(2), center(2) + sigma_c]);
+
    window = Img(startRow:endRow,startCol:endCol, :);
    win_pc = cell(WindowWidth);
-   for row=1:WindowWidth
-       for col=1:WindowWidth
+
+   windowSize = size(window);
+   for row=1:windowSize(1)
+       for col=1:windowSize(2)
            curr_pixel = squeeze(window(row, col, :))';
            
            p_F_gmm = pdf(F_gmm, curr_pixel);
@@ -126,20 +128,6 @@ function win_pc = applyColorModels(Img,center,B_gmm,F_gmm,WindowWidth,sz,sigma_c
            win_pc(row,col) = p_F_gmm / (p_F_gmm + p_B_gmm);           
        end
    end        
-end
-% function f_c = getColorConfidenceValue(window_mask,window_w_c_matrix,window_p_c_matrix)   
-%     up = sum(abs(window_mask - window_p_c_matrix) .* window_w_c_matrix);
-%     down = sum(window_w_c_matrix);
-%     f_c = 1 - up/down;   
-% end
-
-%%%%%%%%%%%%%%%%%%%%%%%% SHAPE CONFIDENCE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function models = getShapeConfidences(maskSize, LocalWindows, ColorConfidences,...
-       window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R)
-   %updating the shape confidences by recalculating it with the new color
-   %confidences and windows
-   models = initShapeConfidences(maskSize, LocalWindows, ColorConfidences,...
-       window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MASK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -161,7 +149,7 @@ function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,
   
        L = warpedMask(startRow:endRow,startCol:endCol, :);       
        pC = applyColorModels(Img,center,ColorModels.window_B_gmms,ColorModels.window_F_gmms,WindowWidth,sz);
-       
+
        pF(i) = fs{i}.*L + (1-fs{i}).*pC;
    end   
    mask = pF;
