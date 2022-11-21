@@ -5,10 +5,10 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 70;  
+WindowWidth = 50;  
 ProbMaskThreshold = .5; %need to look at the paper to see what to set this to
 NumWindows= 20; 
-BoundaryWidth = 3;
+BoundaryWidth = 5;
 
 
 % Load images:
