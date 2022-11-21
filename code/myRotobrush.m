@@ -5,9 +5,9 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 50;  
+WindowWidth = 80;  
 ProbMaskThreshold = .5; %need to look at the paper to see what to set this to
-NumWindows= 20; 
+NumWindows= 30; 
 BoundaryWidth = 5;
 
 
@@ -106,7 +106,7 @@ for prev=1:(length(files)-1)
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
-    showLocalWindows(LocalWindows,WindowWidth,'r.');
+%     showLocalWindows(LocalWindows,WindowWidth,'r.');
     showLocalWindows(NewLocalWindows,WindowWidth,'b.');
     hold off
     
