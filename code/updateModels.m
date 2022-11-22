@@ -143,14 +143,17 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MASK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,WindowWidth,Img)
    fs = ShapeConfidences;
-   num_windows = (size(NewLocalWindows))*[1;0];   
+   num_windows = size(NewLocalWindows,1);   
    sigma_c = round(WindowWidth / 2);
-   pF = cell(1,num_windows);
+   %pF = cell(1,num_windows);
+   
    sz = size(warpedMask);
+   pF = [];%zeros(sz(1),sz(2),num_windows);
    %Need to segment the warpedMask because it is for the entire frame and
    %not just for the individual windows
    for i = 1:num_windows
        center = NewLocalWindows(i,:);
+       center = [center(2) center(1)];
        startRow = max([1, center(1) - sigma_c]);% added min/max to avoid out of range at image edges.
        endRow = (min([sz(1), center(1) + sigma_c]));
   
@@ -159,7 +162,7 @@ function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,
   
        L = warpedMask(startRow:endRow,startCol:endCol, :);       
        pC = applyColorModels(Img,center,ColorModels.window_B_gmms,ColorModels.window_F_gmms,WindowWidth,sz);        
-       pF{i} = (fs{i}*L' + (1-fs{i})*pC')';
+       pF = [fs{i}.*L + (1-fs{i}).*pC;pF];
    end   
    mask = pF;
 end
