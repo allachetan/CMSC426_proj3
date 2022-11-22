@@ -110,34 +110,34 @@ function win_pc = applyColorModels(Img,center,B_gmm,F_gmm,WindowWidth,sz)
     
     window = Img(startRow:endRow,startCol:endCol, :);
 
-    A = reshape(window,[size(window,1)*size(window,2) 3]); 
-    try %for some unknown reason F_gmm and B_gmm return multiple cells of GMM dists (so i just use the first one given)
-    p_F_gmm = pdf(F_gmm, A);
-    p_B_gmm = pdf(B_gmm, A);    
-    catch
-    p_F_gmm = pdf(F_gmm{1}, A);
-    p_B_gmm = pdf(B_gmm{1}, A); 
-    end   
-    p_F_gmm = reshape(p_F_gmm,[size(window,1) size(window,2)]);
-    p_B_gmm = reshape(p_B_gmm,[size(window,1) size(window,2)]);
-    
-    win_pc = p_F_gmm./(p_F_gmm+p_B_gmm);
-%     windowSize = size(window);
-%     win_pc = zeros(windowSize(1),windowSize(2));
-%     for row=1:windowSize(1)
-%        for col=1:windowSize(2)
-%            curr_pixel = squeeze(window(row, col, :))';
-%            try
-%                p_F_gmm = pdf(F_gmm, curr_pixel);
-%                p_B_gmm = pdf(B_gmm, curr_pixel);
-%            catch
-%                p_F_gmm = pdf(F_gmm{1}, curr_pixel);
-%                p_B_gmm = pdf(B_gmm{1}, curr_pixel);
-%            end
-%                       
-%            win_pc(row,col) = p_F_gmm / (p_F_gmm + p_B_gmm);           
-%        end
-%     end        
+%     A = reshape(window,[size(window,1)*size(window,2) 3]); 
+%     try %for some unknown reason F_gmm and B_gmm return multiple cells of GMM dists (so i just use the first one given)
+%     p_F_gmm = pdf(F_gmm, A);
+%     p_B_gmm = pdf(B_gmm, A);    
+%     catch
+%     p_F_gmm = pdf(F_gmm{1}, A);
+%     p_B_gmm = pdf(B_gmm{1}, A); 
+%     end   
+%     p_F_gmm = reshape(p_F_gmm,[size(window,1) size(window,2)]);
+%     p_B_gmm = reshape(p_B_gmm,[size(window,1) size(window,2)]);
+%     
+%     win_pc = p_F_gmm./(p_F_gmm+p_B_gmm);
+    windowSize = size(window);
+    win_pc = zeros(windowSize(1),windowSize(2));
+    for row=1:windowSize(1)
+       for col=1:windowSize(2)
+           curr_pixel = squeeze(window(row, col, :))';
+           try
+               p_F_gmm = pdf(F_gmm, curr_pixel);
+               p_B_gmm = pdf(B_gmm, curr_pixel);
+           catch
+               p_F_gmm = pdf(F_gmm{1}, curr_pixel);
+               p_B_gmm = pdf(B_gmm{1}, curr_pixel);
+           end
+                      
+           win_pc(row,col) = p_F_gmm / (p_F_gmm + p_B_gmm);           
+       end
+    end        
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MASK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
