@@ -20,16 +20,16 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
   
    LocalWindows = round(NewLocalWindows);
   
-   ColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutline,...
+   NewColorModels = getColorModels(CurrentFrame, warpedMask, warpedMaskOutline,...
             LocalWindows, BoundaryWidth, WindowWidth, ColorModels);  
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SHAPE MODEL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    ColorConfidences = ColorModels.f_c_values;
-   window_d_matrices = ColorModels.window_d_matrices;
-   
-   ShapeConfidences = initShapeConfidences(size(warpedMask), LocalWindows, ColorConfidences,...
+   window_d_matrices = ColorModels.window_d_matrices; 
+   NewShapeConfidences = initShapeConfidences(size(warpedMask), LocalWindows, ColorConfidences,...
        window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R);
-    %ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,WindowWidth,Img
-   mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,WindowWidth,CurrentFrame);
+    
+   mask = getMask(NewColorModels,NewShapeConfidences,LocalWindows,warpedMask,WindowWidth,CurrentFrame);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% COLOR MODEL %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %This is the main function that updates the color models for the current
@@ -97,40 +97,47 @@ function ColorModels = getColorModels(Img, warpedMask, warpedMaskOutline,...
 end
 
 function count = foregroundPixelCount(Img,center,B_GMM,F_GMM,threshold,WindowWidth,sz)          
-   win_pc = applyColorModels(Img,center,B_GMM,F_GMM,WindowWidth,sz);
-   count = sum(win_pc>=threshold,"all"); 
+    win_pc = applyColorModels(Img,center,B_GMM,F_GMM,WindowWidth,sz);
+    count = sum(win_pc>=threshold,"all"); 
 end
 
 function win_pc = applyColorModels(Img,center,B_gmm,F_gmm,WindowWidth,sz)
-    sigma_c = round(WindowWidth / 2);
-    try
-   startRow = max([1, center(1) - sigma_c]);% added min/max to avoid out of range at image edges.
-   endRow = (min([sz(1), center(1) + sigma_c]));
-   startCol = max([1, center(2) - sigma_c]);
-   endCol = min([sz(2), center(2) + sigma_c]);
+    sigma_c = round(WindowWidth / 2);    
+    startRow = max([1, center(1) - sigma_c]);% added min/max to avoid out of range at image edges.
+    endRow = (min([sz(1), center(1) + sigma_c]));
+    startCol = max([1, center(2) - sigma_c]);
+    endCol = min([sz(2), center(2) + sigma_c]);   
+    
+    window = Img(startRow:endRow,startCol:endCol, :);
+
+    A = reshape(window,[size(window,1)*size(window,2) 3]); 
+    try %for some unknown reason F_gmm and B_gmm return multiple cells of GMM dists (so i just use the first one given)
+    p_F_gmm = pdf(F_gmm, A);
+    p_B_gmm = pdf(B_gmm, A);    
     catch
-    "hello"
-    end
-
-   window = Img(startRow:endRow,startCol:endCol, :);
-   windowSize = size(window);
-   win_pc = zeros(windowSize(1),windowSize(2));
-
-   
-   for row=1:windowSize(1)
-       for col=1:windowSize(2)
-           curr_pixel = squeeze(window(row, col, :))';
-           try
-               p_F_gmm = pdf(F_gmm, curr_pixel);
-               p_B_gmm = pdf(B_gmm, curr_pixel);
-           catch
-               p_F_gmm = pdf(F_gmm{1}, curr_pixel);
-               p_B_gmm = pdf(B_gmm{1}, curr_pixel);
-           end
-                      
-           win_pc(row,col) = p_F_gmm / (p_F_gmm + p_B_gmm);           
-       end
-   end        
+    p_F_gmm = pdf(F_gmm{1}, A);
+    p_B_gmm = pdf(B_gmm{1}, A); 
+    end   
+    p_F_gmm = reshape(p_F_gmm,[size(window,1) size(window,2)]);
+    p_B_gmm = reshape(p_B_gmm,[size(window,1) size(window,2)]);
+    
+    win_pc = p_F_gmm./(p_F_gmm+p_B_gmm);
+%     windowSize = size(window);
+%     win_pc = zeros(windowSize(1),windowSize(2));
+%     for row=1:windowSize(1)
+%        for col=1:windowSize(2)
+%            curr_pixel = squeeze(window(row, col, :))';
+%            try
+%                p_F_gmm = pdf(F_gmm, curr_pixel);
+%                p_B_gmm = pdf(B_gmm, curr_pixel);
+%            catch
+%                p_F_gmm = pdf(F_gmm{1}, curr_pixel);
+%                p_B_gmm = pdf(B_gmm{1}, curr_pixel);
+%            end
+%                       
+%            win_pc(row,col) = p_F_gmm / (p_F_gmm + p_B_gmm);           
+%        end
+%     end        
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MASK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,12 +158,8 @@ function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,
        endCol = min([sz(2), center(2) + sigma_c]);
   
        L = warpedMask(startRow:endRow,startCol:endCol, :);       
-       pC = applyColorModels(Img,center,ColorModels.window_B_gmms,ColorModels.window_F_gmms,WindowWidth,sz);
-        try
+       pC = applyColorModels(Img,center,ColorModels.window_B_gmms,ColorModels.window_F_gmms,WindowWidth,sz);        
        pF{i} = (fs{i}*L' + (1-fs{i})*pC')';
-        catch
-            "hello"
-        end
    end   
    mask = pF;
 end
