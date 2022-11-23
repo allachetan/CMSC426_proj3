@@ -22,6 +22,8 @@ for i=1:length(files)
 end
 
 
+% ISSUES HERE WITH FPATH AND IMAGES 
+
 imageNames = sort(imageNames);
 imageNames = num2str(imageNames);
 imageNames = strcat(imageNames, '.jpg');
@@ -29,8 +31,9 @@ imageNames = strcat(imageNames, '.jpg');
 for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
-img = imread("../input/2.jpg");
+img = imread("../input/3.jpg");
 images{1} = img;
+images{2} = img;
 
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
 % mask = roipoly(images{1});
@@ -96,13 +99,15 @@ for prev=1:(length(files)-1)
     %%% Global affine transform between previous and current frames:
     [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = ...
         calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
+
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
         localFlowWarp(warpedFrame,images{curr},warpedLocalWindows,warpedMask,WindowWidth);
     
     NewLocalWindows = ceil(NewLocalWindows);
-    paintZerosWithWindowMasks(warpedMask, round(NewLocalWindows), WindowWidth);
+
+    paintZerosWithWindowMasks(warpedMask, NewLocalWindows, WindowWidth);
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on

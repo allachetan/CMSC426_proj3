@@ -46,7 +46,7 @@ for i = 1:2
 %     plot(flow,'DecimationFactor',[5 5],'ScaleFactor',60,'Parent',hPlot);
 %     hold off
 %     pause(10^-3)
-    flow_vect{1} = flow.Vx;
+    e flow_vect{1} = flow.Vx;
     flow_vect{2} = flow.Vy;
 
 end

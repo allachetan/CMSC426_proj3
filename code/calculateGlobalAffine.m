@@ -3,8 +3,8 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
 % CALCULATEGLOBALAFFINE: finds affine transform between two frames, and applies it to frame1, the mask, and local windows.
 
 % Detects feature in both frames (maybe add vision. before the sift feat)
-im1Features  = detectSIFTFeatures(rgb2gray(IMG1), Sigma = 0.5);
-im2Features = detectSIFTFeatures(rgb2gray(IMG2), Sigma = 0.5);
+im1Features  = detectSIFTFeatures(rgb2gray(IMG1), Sigma = 1.6);
+im2Features = detectSIFTFeatures(rgb2gray(IMG2), Sigma = 1.6);
 % 
 % im1Features = im1Features.selectStrongest(20);
 % im2Features = im2Features.selectStrongest(20);
@@ -24,11 +24,11 @@ B = A(1:n,:);
 C = A(n+1:end,:);
 
 
-
 k = randperm(size(B, 1));
+j = randperm(size(C, 1));
 
-new_indB = B(k(1:15),:);
-new_indC = C(k(1:15),:);
+new_indB = B(k(1:n),:);
+new_indC = C(j(1:(n-1)),:);
 
 new_ind = [new_indB;new_indC];
 
@@ -61,6 +61,7 @@ showMatchedFeatures(IMG1,IMG2,matchedim1Features,matchedim2Features);
 
 % applies affine transformation to first frame 
 [WarpedFrame, RA] = imwarp(IMG1, tform, OutputView=imref2d(size(IMG1)));
+
 
 [WarpedMask, RB] = imwarp(Mask, tform, OutputView=imref2d(size(Mask)));
 
