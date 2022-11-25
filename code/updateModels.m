@@ -28,7 +28,7 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
        window_d_matrices, WindowWidth, SigmaMin, A, fcutoff, R);
     
    mask = getMask(NewColorModels,NewShapeConfidences,LocalWindows,...
-       warpedMask,WindowWidth,CurrentFrame,ProbMaskThreshold);
+       warpedMask,WindowWidth,CurrentFrame, LocalWindows, ProbMaskThreshold);
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Local Windows %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   [~, LocalWindows] = initLocalWindows(CurrentFrame, mask, ...
@@ -43,11 +43,12 @@ end
 function ColorModels = getColorModels(Img, warpedMask, warpedMaskOutline,...
    LocalWindows, BoundaryWidth, WindowWidth, oldColorModels)
    %%%% Hyper Parameter %%%%
-   threshold = .75;   
+   threshold = .5;   
 
    %Getting color models for the current frame
    newColorModels = initColorModels(Img, warpedMask, ...
        warpedMaskOutline, LocalWindows, BoundaryWidth, WindowWidth);
+
 
    %getting the foreground GMMS
    oldFGMMS = oldColorModels.window_F_gmms;
@@ -125,7 +126,8 @@ function win_pc = applyColorModels(Img,center,B_gmm,F_gmm,WindowWidth,sz)
     win_pc = zeros(windowSize(1),windowSize(2));
     for row=1:windowSize(1)
        for col=1:windowSize(2)
-           curr_pixel = squeeze(window(row, col, :))';
+           curr_pixel = transpose(double(squeeze(window(row, col, :))));
+           curr_pixel = curr_pixel./255;
            try
                p_F_gmm = pdf(F_gmm, curr_pixel);
                p_B_gmm = pdf(B_gmm, curr_pixel);
@@ -139,13 +141,16 @@ function win_pc = applyColorModels(Img,center,B_gmm,F_gmm,WindowWidth,sz)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MASK %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,WindowWidth,Img,ProbMaskThreshold)
+function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,WindowWidth,Img, LocalWindows, ProbMaskThreshold)
    fs = ShapeConfidences;
    num_windows = size(NewLocalWindows,1);   
    sigma_c = round(WindowWidth / 2);      
    sz = size(warpedMask);
    pF = [];
    mask = zeros(size(Img,1),size(Img,2));
+
+   mergeLocalWindowsTop = zeros(size(Img(:, :, 1)));
+   mergeLocalWindowsBot = zeros(size(Img(:, :, 1)));
    %Need to segment the warpedMask because it gives the mask for the entire frame and
    %not just for the individual windows
    for i = 1:num_windows
@@ -161,8 +166,26 @@ function mask = getMask(ColorModels,ShapeConfidences,NewLocalWindows,warpedMask,
        pC = applyColorModels(Img,center,ColorModels.window_B_gmms,ColorModels.window_F_gmms,WindowWidth,sz);   
        currWindow = fs{i}.*L + (1-fs{i}).*pC;   
        mask(startRow:endRow,startCol:endCol, :) = currWindow >= ProbMaskThreshold;
-       %pF = [pF ; currFrame ];
-   end   
-   %mask = pF;
-end
+       pF = [pF ; currWindow ];
 
+       x = repmat(1:ceil(WindowWidth/2)*2 + 1, ceil(WindowWidth/2)*2 + 1, 1);
+       y = repmat(transpose(ceil(WindowWidth/2)*2 + 1:-1:1), 1, ceil(WindowWidth/2)*2 + 1);
+       c = [ceil(WindowWidth/2) ceil(WindowWidth/2)];
+       centerDistanceMatrix = sqrt((y - c(1)) .^ 2 + (x - c(2)) .^ 2) + 0.1;
+       invCenterDistanceMatrix = 1./centerDistanceMatrix;
+ 
+       xl = center(1) - ceil(WindowWidth/2);
+       xr = center(1) + ceil(WindowWidth/2);
+       yl = center(2) - ceil(WindowWidth/2);
+       yr = center(2) + ceil(WindowWidth/2);
+       mergeLocalWindowsTop(xl:xr, yl:yr) = mergeLocalWindowsTop(xl:xr, yl:yr) + currWindow .* invCenterDistanceMatrix;
+       mergeLocalWindowsBot(xl:xr, yl:yr) = mergeLocalWindowsBot(xl:xr, yl:yr) + invCenterDistanceMatrix;
+   end   
+   mergedLocalWindows = mergeLocalWindowsTop./mergeLocalWindowsBot;
+   mask = mergedLocalWindows > 0.9;
+   mask = imfill(mask, 'holes');
+   mask = bwareaopen(mask, 25);
+   [maskOutline, LocalWindows] = initLocalWindows(Img, mask, length(LocalWindows(:,1)), WindowWidth, false);
+   mask = imfill(maskOutline, 'holes');
+   imshow(mask)
+end
